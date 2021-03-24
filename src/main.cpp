@@ -76,7 +76,6 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   Ticker_V.attach_ms(period_v,get_vibrospeed);
   Ticker_A.attach_ms(period_a,upate_vibrospeed_value);
   Ticker_T.attach_ms(period_temp,update_temperature_value);
-  // Ticker_C.attach_ms(period_c,update_calibration);
   //====================================================================================
 }
 
@@ -85,7 +84,6 @@ void loop()
   // Отображение страницы для OTA-update
   server.handleClient();
   MDNS.update();
-
   extern bool flag_a, flag_temp;
   extern uint16_t count_temp, count_a;
   if(flag_a && flag_temp)
@@ -127,18 +125,12 @@ void upate_vibrospeed_value()
   {
     time_to_json = String(get_time(sync_time));
     speed_to_json =String(rms);
-    Serial.println(rms);
-    // Serial.print(' ');
-    // Serial.print(filVal_x);
-    // Serial.print(' ');
-    // Serial.print(filVal_y);
-    // Serial.print(' ');
-    // Serial.println(filVal_z);
+    // Serial.println(rms);
     opros_axel[count_a]=speed_to_json; // запись виброскорости и времени в массивы
     opros_axel_time[count_a]=time_to_json;
     ++count_a;
     flag_a = false;
-    vibro_speed_x = 0;
+    vibro_speed_x = 0; // неоднозначно
     vibro_speed_y = 0;
     vibro_speed_z = 0;
   }
@@ -181,12 +173,8 @@ void post_json()
   WiFiClient client;
   HTTPClient http;
   String buffer; // локальны буффер json документа
-  // Ticker_A.detach();
-  // Ticker_V.detach();
-  // Ticker_T.detach();
   DynamicJsonDocument jsonDocument(capacity); // объявление динамического jsom документа
   jsonDocument ["MAC"] = MAC; // добавление MAC адресаа в JSON
-
   // добавление соответвствующих массивов в json
   JsonArray Axel_time = jsonDocument.createNestedArray("Axel_time");
   JsonArray Axel = jsonDocument.createNestedArray("Axel");
@@ -217,10 +205,6 @@ void post_json()
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.POST(buffer);
   http.end();
-  // Serial.println("Отправляю!");
-  // Ticker_V.attach_ms(period_v,get_vibrospeed);
-  // Ticker_A.attach_ms(period_a,upate_vibrospeed_value);
-  // Ticker_T.attach_ms(period_temp,update_temperature_value);
 }
 
 void calibration()
