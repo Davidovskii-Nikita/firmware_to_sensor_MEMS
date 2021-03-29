@@ -64,17 +64,13 @@ double sync_time; // глобальная переменная, содержащ
 const char* host_OTA = "esp-8266";// название устройства в локальной сети для прошивки через браузер
 const char* serverIndex = "<title>Update ESP</title><h1> Update ESP8266  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
 const char* update_path = "/firmware";
-
-// Бегущее среднее
-//==========================================================
-float k = 0.05;
-float filVal_x = 0;
-float filVal_y = 0; 
-float filVal_z = 0;
-//==========================================================
-
-
-float time_to_calibr = 100;
+// Фильтр бегущего среднего
+//====================================================================================
+float k = 0.05; // настройка фильтра
+float filVal_x = 0; // содержит отфильтрованиие и нормализированное значение по оси x
+float filVal_y = 0; // содержит отфильтрованиие и нормализированное значение по оси y
+float filVal_z = 0; // содержит отфильтрованиие и нормализированное значение по оси z
+float time_to_calibr = 100;// колличество точек фильтрования
 //====================================================================================
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
@@ -96,6 +92,5 @@ void calibration(); // получает значения углов, для ни
 void expRunningAverage(float x ,float y, float z); // бегущее среднее для 3 осей
 float clamp(float v, float minv, float maxv); // функция clamp если больше maxv то v если меньше min то м
 void discret_integral(float x, float y, float z); // дискретное интегрирование по 3 осям
-// void update_calibration();// тестовая функция параллельной каллибровки
 //====================================================================================
 #endif

@@ -56,7 +56,7 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   //====================================================================================
   MDNS.begin(host_OTA);
   MDNS.addService("http", "tcp", 80); 
-
+  WiFi.setOutputPower(5);
   Serial.begin(9600); // отладка по последовательному порту
   Wire.begin(2, 0);  // инициализация I2C на GPIO 2 и 0 (SDA, SCL)
   sync_time = update_ntp(); // получение UNIX-времени
@@ -71,6 +71,7 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   capacity = 2 * JSON_ARRAY_SIZE(range_temp) + 2 * JSON_ARRAY_SIZE(range_a) + JSON_OBJECT_SIZE(5) + 3500; // вычисление объема JSON файла
   local_time_ms = millis();
   calibration();
+  WiFi.setOutputPower(0);
   // Блок инициализации таймеров
   //====================================================================================
   Ticker_V.attach_ms(period_v,get_vibrospeed);
@@ -223,7 +224,6 @@ void calibration()
     ++i;
   }
   i=0;
-  // Serial.println("Calibration");
 }
 
 void expRunningAverage(float x ,float y, float z)
