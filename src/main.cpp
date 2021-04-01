@@ -8,6 +8,11 @@ void setup()
   extern uint16_t scale_factor;
   WiFi.begin(ssid, password);
   delay(100);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    offset_startup_time = (double)millis()/1000;
+    delay(1500);
+  }
   WiFi.mode(WIFI_AP_STA); 
   // Создание WEB-страницы
   //====================================================================================
@@ -73,6 +78,8 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   calibration();
   WiFi.setOutputPower(0);
   // Блок инициализации таймеров
+  // Объект класса Ticker вызывает функцию attach_ms с параметрами 
+  // периода вызова и функци вызова
   //====================================================================================
   Ticker_V.attach_ms(period_v,get_vibrospeed);
   Ticker_A.attach_ms(period_a,upate_vibrospeed_value);
@@ -124,7 +131,7 @@ void upate_vibrospeed_value()
   calibration(); 
   if (count_a<range_a)
   {
-    time_to_json = String(get_time(sync_time));
+    time_to_json = String(get_time(sync_time,offset_startup_time));
     speed_to_json =String(rms);
     // Serial.println(rms);
     opros_axel[count_a]=speed_to_json; // запись виброскорости и времени в массивы
@@ -156,7 +163,7 @@ void update_temperature_value()
   if(count_temp<range_temp)
   {
     res_from_i2c = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_TEMP);
-    time_to_json = String(get_time(sync_time));
+    time_to_json = String(get_time(sync_time,offset_startup_time));
     temp_to_json=String(get_temp(res_from_i2c));
     opros_temp[count_temp]=temp_to_json;// запись температуры и времени в массив
     opros_temp_time[count_temp]=time_to_json;

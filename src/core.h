@@ -64,6 +64,7 @@ double sync_time; // глобальная переменная, содержащ
 const char* host_OTA = "esp-8266";// название устройства в локальной сети для прошивки через браузер
 const char* serverIndex = "<title>Update ESP</title><h1> Update ESP8266  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
 const char* update_path = "/firmware";
+double offset_startup_time = 0;
 // Фильтр бегущего среднего
 //====================================================================================
 float k = 0.05; // настройка фильтра
@@ -80,7 +81,7 @@ Ticker Ticker_A, Ticker_T, Ticker_V; // инициализация счетчи�
 void I2C_Write(uint8_t deviceAddress, uint8_t regAddress, uint8_t data);// функция записи значений по I2C
 int16_t I2C_Read(uint8_t deviceAddress, uint8_t regAddress); // функция чтения значений 2 байт по I2C
 double update_ntp(); // функция получения времени
-double get_time(double s_t); // функция синхронизации времени s_t - время UNIX (sync_time)
+double get_time(double s_t, double offset); // функция синхронизации времени s_t - время UNIX (sync_time)
 float get_value_from_reg (uint8_t dev_adress, uint8_t reg_adress, uint16_t scale_factor); // получение вещественного значения из регистров
 float get_RMS(float a, float b, float c); // расчет СКЗ
 void get_vibrospeed();//интешрирование ускорения, управляется таймером Ticker_V
