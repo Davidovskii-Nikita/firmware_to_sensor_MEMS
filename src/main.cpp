@@ -61,7 +61,6 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   //====================================================================================
   MDNS.begin(host_OTA);
   MDNS.addService("http", "tcp", 80); 
-  WiFi.setOutputPower(5);
   Serial.begin(9600); // отладка по последовательному порту
   Wire.begin(2, 0);  // инициализация I2C на GPIO 2 и 0 (SDA, SCL)
   sync_time = update_ntp(); // получение UNIX-времени
@@ -117,9 +116,7 @@ void get_vibrospeed()
   discret_integral(X,Y,Z);
   // получение СКЗ
   rms = get_RMS(vibro_speed_x,vibro_speed_y,vibro_speed_z);
-  
-  
-}
+} 
  
 void upate_vibrospeed_value()
 {
@@ -138,6 +135,7 @@ void upate_vibrospeed_value()
     opros_axel_time[count_a]=time_to_json;
     ++count_a;
     flag_a = false;
+
     vibro_speed_x = 0; // неоднозначно
     vibro_speed_y = 0;
     vibro_speed_z = 0;
@@ -204,10 +202,10 @@ void post_json()
   
   serializeJson(jsonDocument, buffer); // создание заполненного json документа
 
-  http.begin(client, URL1);// отправка
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  http.POST(buffer);
-  http.end();
+  // http.begin(client, URL1);// отправка
+  // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // http.POST(buffer);
+  // http.end();
 
   http.begin(client, URL2);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
