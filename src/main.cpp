@@ -104,20 +104,31 @@ void loop()
  
 }
 
+  /**
+   *  @brief  Считает значение виброскорости.
+   *  @param  scale_factor  Внешняя переменная для получения нормального значения ускорения.
+   *  @return Ничего не возвращает, обновляет глобальную перемнную rms.
+  */
 void get_vibrospeed()
 {
   extern uint16_t scale_factor;
   //получение значений ускорений
   float X,Y,Z;
-  X = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_XOUT_H,scale_factor) - filVal_x;
-  Y = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_YOUT_H,scale_factor) - filVal_y;
-  Z = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_ZOUT_H,scale_factor) - filVal_z;
+  X = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_XOUT_H,scale_factor,norm_x) - filVal_x;
+  Y = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_YOUT_H,scale_factor,norm_y) - filVal_y;
+  Z = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_ZOUT_H,scale_factor,norm_z) - filVal_z;
   // интегрирование по 3 осям
   discret_integral(X,Y,Z);
   // получение СКЗ
   rms = get_RMS(vibro_speed_x,vibro_speed_y,vibro_speed_z);
 } 
  
+  /**
+   *  @brief  Наполняет глобальные массивы данных(opros_axel[], opros_axel_time[]), сигнализирует о наполненности последних.
+   *  @param  flag_a  Глобальный флаг, сигнализирующий о заполненности массивов.
+   *  @param  count_a  Колличество значений, записываемых в массивы
+   *  @param  rms Глобальная переменная среднеквадратичного значения виброскорости по трем осям.
+  */
 void upate_vibrospeed_value()
 {
   extern bool flag_a;
@@ -128,7 +139,7 @@ void upate_vibrospeed_value()
   calibration(); 
   if (count_a<range_a)
   {
-    time_to_json = String(get_time(sync_time,offset_startup_time));
+    time_to_json = String(get_time(sync_time,offset_startup_time)*1000.0);
     speed_to_json =String(rms);
     // Serial.println(rms);
     opros_axel[count_a]=speed_to_json; // запись виброскорости и времени в массивы
@@ -150,6 +161,11 @@ void upate_vibrospeed_value()
 
 }
 
+  /**
+   *  @brief  Наполняет глобальные массивы данных(opros_temp[], opros_temp_time[]), сигнализирует о наполненности последних.
+   *  @param  flag_t  Глобальный флаг, сигнализирующий о заполненности массивов.
+   *  @param  count_t  Колличество значений, записываемых в массивы
+  */
 void update_temperature_value()
 {
   extern bool flag_temp;
@@ -161,8 +177,8 @@ void update_temperature_value()
   if(count_temp<range_temp)
   {
     res_from_i2c = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_TEMP);
-    time_to_json = String(get_time(sync_time,offset_startup_time));
-    temp_to_json=String(get_temp(res_from_i2c));
+    time_to_json = String(get_time(sync_time,offset_startup_time)*1000.0);
+    temp_to_json = String(get_temp(res_from_i2c));
     opros_temp[count_temp]=temp_to_json;// запись температуры и времени в массив
     opros_temp_time[count_temp]=time_to_json;
     ++count_temp;
@@ -174,11 +190,15 @@ void update_temperature_value()
   }
 }
 
+  /**
+   *  @brief  Формирование json- -документа и отправка его.
+  */
 void post_json()
 {
   WiFiClient client;
   HTTPClient http;
   String buffer; // локальны буффер json документа
+  String dat="data=";
   DynamicJsonDocument jsonDocument(capacity); // объявление динамического jsom документа
   jsonDocument ["MAC"] = MAC; // добавление MAC адресаа в JSON
   // добавление соответвствующих массивов в json
@@ -189,6 +209,7 @@ void post_json()
 
   int i = 0;
   int j = 0;
+
   for(i = 0; i < range_temp; i++)// наполнеие массивов данными
   {
     Temp.add(opros_temp[i]);
@@ -200,12 +221,14 @@ void post_json()
     Axel_time.add(opros_axel_time[j]);
   }
   
-  serializeJson(jsonDocument, buffer); // создание заполненного json документа
+  serializeJson(jsonDocument, buffer); // создание заполненного json
 
-  // http.begin(client, URL1);// отправка
-  // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  // http.POST(buffer);
-  // http.end();
+  String new_buffer = dat + buffer;
+
+  http.begin(client, URL1);// отправка
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  http.POST(buffer);
+  http.end();
 
   http.begin(client, URL2);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -213,15 +236,18 @@ void post_json()
   http.end();
 }
 
+  /**
+   *  @brief  Калибровка данных, получаемых с каждой оси путем расчета експоненциального бегущего среднего.
+  */
 void calibration()
 {
   float x,y,z;
   float i = 0;
   while( i < time_to_calibr)
   {
-    x = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_XOUT_H,scale_factor);
-    y = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_YOUT_H,scale_factor);
-    z = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_ZOUT_H,scale_factor);
+    x = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_XOUT_H,scale_factor, norm_x);
+    y = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_YOUT_H,scale_factor, norm_y);
+    z = get_value_from_reg(MPU6050SlaveAddress,MPU6050_REGISTER_ACCEL_ZOUT_H,scale_factor, norm_z);
     x = clamp(x,-1.0,1.0);
     y = clamp(y,-1.0,1.0);
     z = clamp(z,-1.0,1.0);
@@ -231,6 +257,11 @@ void calibration()
   i=0;
 }
 
+  /**
+   *  @brief  Расчет бегущего среднего.
+   *  @param  x,y,z  Для каждой переменной считается бегущее среднее.
+   *  @return Ничего не возвращает, обновляет глобальные переменные (filVal_x, filVal_y, filVal_z)
+  */
 void expRunningAverage(float x ,float y, float z)
 {
   filVal_x += (x - filVal_x) * k;
@@ -238,7 +269,11 @@ void expRunningAverage(float x ,float y, float z)
   filVal_z += (z - filVal_z) * k;
 }
 
-
+  /**
+   *  @brief  Дискретеое интегрирование.
+   *  @param  x,y,z  Для каждой переменной считается дискрентное интегрирование.
+   *  @return Ничего не возвращает, обновляет глобальные переменные (vibro_speed_x, vibro_speed_y, vibro_speed_z)
+  */
 void discret_integral(float x, float y, float z)
 {
   vibro_speed_x = vibro_speed_x + ((x+old_x)*(period_v/2000.0)*g)*(1000.0/period_v); // дискретное интегрирование методом трапеций

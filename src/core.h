@@ -12,9 +12,13 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <Ticker.h>
 // Блок настройки пользователем
-//====================================================================================
-const char* ssid = "RUT230_B4D2";// название WiFi сети
-const char* password = "a4UQi1r0" ;// пароль WiFi сети
+// ====================================================================================
+const char* ssid = "RUT230_9A75";// название WiFi сети
+const char* password = "z1x2c3v4b5" ;// пароль WiFi сети
+// const char* ssid = "RUT230_B4D2";// название WiFi сети
+// const char* password = "a4UQi1r0" ;// пароль WiFi сети
+// const char* ssid = "Keenetic-8735";// название WiFi сети
+// const char* password = "hj838RRe" ;// пароль WiFi сети
 const int full_scale_range = 16; // диапазон измерений акселерометра( 2, 4, 8, 16)
 const uint16_t period_a = 250; // Частота записи виброскорости
 const uint16_t period_temp = 2500; // Частота записи темперартуры
@@ -24,9 +28,10 @@ const uint16_t range_a = 100; // колличество значений виб�
 const uint16_t range_temp = 10; // колличество значений времени в 1 пакете
 // const char* host = "http://192.168.1.212:8001"; // адрес хоста
 const char* host = "http://192.168.1.212:8001/"; // адрес хоста
-String URL1 = "http://95.215.204.182:40001"; // адрес куда отправляются POST запросы
+String URL1 = "http://192.168.8.212:8001/nkvm"; // адрес куда отправляются POST запросы
 // String URL2 = "http://192.168.1.212:8001/nkvm"; // адрес куда отправляются POST запросы
-String URL2 = "http://192.168.1.212:8001/nkvm"; // адрес куда отправляются POST запросы
+// String URL2 = "http://abaravy1.had.su/vibro_api.php?tablename=testtable3"; // адрес куда отправляются POST запросы
+String URL2 = "http://abaravy1.had.su/vibro_api.php?tablename=testtable3";// студентовский
 //====================================================================================
 // Адреса регистров MPU6050
 //====================================================================================
@@ -38,6 +43,12 @@ const uint8_t MPU6050_REGISTER_ACCEL_XOUT_H =  0x3B; // MSB ускорения �
 const uint8_t MPU6050_REGISTER_ACCEL_YOUT_H =  0x3D; // MSB ускорения по оси Y
 const uint8_t MPU6050_REGISTER_ACCEL_ZOUT_H =  0x3F; // MSB ускорения по оси Z
 const uint8_t MPU6050_REGISTER_TEMP =  0x41; // МSB значения температуры
+//====================================================================================
+// Константы каллибровки
+//====================================================================================
+float norm_x = 0.0;
+float norm_y = 0.0;
+float norm_z = 0.0;
 //====================================================================================
 // Функциональные переменные
 //====================================================================================
@@ -61,8 +72,8 @@ bool flag_a, flag_temp; // флаги достижения счетчиками 
 const uint16_t for_scale = 32768; // для расчета делителя ускорения
 uint16_t local_time_ms;
 double sync_time; // глобальная переменная, содержащая UNIX время в момент старта ESP
-const char* host_OTA = "esp-8266_E6_3C";// название устройства в локальной сети для прошивки через браузер
-const char* serverIndex = "<title>Update ESP</title><h1> Update ESP8266 E6-3C  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
+const char* host_OTA = "esp-8266_e";// название устройства в локальной сети для прошивки через браузер
+const char* serverIndex = "<title> Update ESP</title><h1> Update ESP8266 E6-3C Send data to http://abaravy1.had.su/vibro_api.php?tablename=testtable3  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
 const char* update_path = "/firmware";
 double offset_startup_time = 0;
 // Фильтр бегущего среднего
@@ -78,11 +89,12 @@ ESP8266HTTPUpdateServer httpUpdater;
 Ticker Ticker_A, Ticker_T, Ticker_V; // инициализация счетчиков
 // Инициализация функций
 //====================================================================================
+
 void I2C_Write(uint8_t deviceAddress, uint8_t regAddress, uint8_t data);// функция записи значений по I2C
 int16_t I2C_Read(uint8_t deviceAddress, uint8_t regAddress); // функция чтения значений 2 байт по I2C
 double update_ntp(); // функция получения времени
 double get_time(double s_t, double offset); // функция синхронизации времени s_t - время UNIX (sync_time)
-float get_value_from_reg (uint8_t dev_adress, uint8_t reg_adress, uint16_t scale_factor); // получение вещественного значения из регистров
+float get_value_from_reg (uint8_t dev_adress, uint8_t reg_adress, uint16_t scale_factor, float const_to_norm); // получение вещественного значения из регистров
 float get_RMS(float a, float b, float c); // расчет СКЗ
 void get_vibrospeed();//интешрирование ускорения, управляется таймером Ticker_V
 void upate_vibrospeed_value(); //запись значения виброскорости в массив с меткой времени. Управляется таймером Ticker_A
