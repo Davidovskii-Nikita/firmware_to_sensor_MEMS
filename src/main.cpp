@@ -139,7 +139,7 @@ void upate_vibrospeed_value()
   calibration(); 
   if (count_a<range_a)
   {
-    time_to_json = String(get_time(sync_time,offset_startup_time)*1000.0);
+    time_to_json = String(get_time(sync_time,offset_startup_time));
     speed_to_json =String(rms);
     // Serial.println(rms);
     opros_axel[count_a]=speed_to_json; // запись виброскорости и времени в массивы
@@ -177,7 +177,7 @@ void update_temperature_value()
   if(count_temp<range_temp)
   {
     res_from_i2c = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_TEMP);
-    time_to_json = String(get_time(sync_time,offset_startup_time)*1000.0);
+    time_to_json = String(get_time(sync_time,offset_startup_time));
     temp_to_json = String(get_temp(res_from_i2c));
     opros_temp[count_temp]=temp_to_json;// запись температуры и времени в массив
     opros_temp_time[count_temp]=time_to_json;
