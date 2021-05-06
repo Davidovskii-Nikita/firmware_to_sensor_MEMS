@@ -11,10 +11,22 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <Ticker.h>
+#include <PubSubClient.h>
+// Блок настройки пользователем
+// Блок настройки пользователем
+
+// Блок настройки пользователем
+// Блок настройки пользователем
+// Блок настройки пользователем
+// Блок настройки пользователем
+// Блок настройки пользователем
 // Блок настройки пользователем
 //====================================================================================
-const char* ssid = "RUT230_B4D2";// название WiFi сети
-const char* password = "a4UQi1r0" ;// пароль WiFi сети
+const char* ssid = "RUT230_9A75";// название WiFi сети
+const char* password = "z1x2c3v4b5" ;// пароль WiFi сети
+const char* mqtt_server = "M5.WQTT.RU";
+const char* login = "u_WUYIDH";
+const char* pass_mqtt = "kVu4uMTX";
 const int full_scale_range = 16; // диапазон измерений акселерометра( 2, 4, 8, 16)
 const uint16_t period_a = 250; // Частота записи виброскорости
 const uint16_t period_temp = 2500; // Частота записи темперартуры
@@ -76,6 +88,7 @@ float time_to_calibr = 100;// колличество точек фильтров
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 Ticker Ticker_A, Ticker_T, Ticker_V; // инициализация счетчиков
+
 // Инициализация функций
 //====================================================================================
 void I2C_Write(uint8_t deviceAddress, uint8_t regAddress, uint8_t data);// функция записи значений по I2C

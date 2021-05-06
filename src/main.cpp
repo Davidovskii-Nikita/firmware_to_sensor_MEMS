@@ -1,6 +1,29 @@
 #include <Arduino.h>
 #include "core.h"
 
+
+WiFiClient client;
+PubSubClient client_mqtt(client);
+
+
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client_mqtt.connected()) 
+  {
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    if (client_mqtt.connect(clientId.c_str(), login, pass_mqtt)) 
+    {
+      client_mqtt.subscribe("inTopic");
+    } 
+    else 
+    {
+      delay(5000);
+    }
+  }
+}
+
+
 void setup() 
 {
   extern double sync_time;
@@ -76,6 +99,9 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   local_time_ms = millis();
   calibration();
   WiFi.setOutputPower(0);
+
+  client_mqtt.setServer(mqtt_server, 2938); //1883
+
   // Блок инициализации таймеров
   // Объект класса Ticker вызывает функцию attach_ms с параметрами 
   // периода вызова и функци вызова
@@ -93,6 +119,13 @@ void loop()
   MDNS.update();
   extern bool flag_a, flag_temp;
   extern uint16_t count_temp, count_a;
+  if (!client_mqtt.connected()) 
+  {
+    reconnect();
+  }
+  
+  client_mqtt.loop();
+
   if(flag_a && flag_temp)
   {
     post_json(); // сбор и отправка данных
@@ -176,7 +209,7 @@ void update_temperature_value()
 
 void post_json()
 {
-  WiFiClient client;
+  // WiFiClient client;
   HTTPClient http;
   String buffer; // локальны буффер json документа
   DynamicJsonDocument jsonDocument(capacity); // объявление динамического jsom документа
@@ -186,6 +219,9 @@ void post_json()
   JsonArray Axel = jsonDocument.createNestedArray("Axel");
   JsonArray Temp_time = jsonDocument.createNestedArray("Temp_time");
   JsonArray Temp = jsonDocument.createNestedArray("Temp");
+
+
+
 
   int i = 0;
   int j = 0;
@@ -202,10 +238,13 @@ void post_json()
   
   serializeJson(jsonDocument, buffer); // создание заполненного json документа
 
-  // http.begin(client, URL1);// отправка
-  // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  // http.POST(buffer);
-  // http.end();
+  int len = buffer.length();
+
+  client_mqtt.beginPublish("outTopic",len, false);
+
+  client_mqtt.print(buffer);
+
+  client_mqtt.endPublish();
 
   http.begin(client, URL2);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
