@@ -68,7 +68,25 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   // Блок инициализации MPU6050;
   //====================================================================================
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_PWR_MGMT_1,0x01);
+    switch (full_scale_range)
+{
+case 16:
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
+  break;
+case 8:
+  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x10);
+  break;
+case 4:
+  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x08);
+  break;
+case 2:
+  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x00);
+  break;  
+
+default:
+  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
+  break;
+}
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_INT_ENABLE, 0x01);
   //====================================================================================
   MAC = WiFi.macAddress(); // Получение MAC адреса устройства
