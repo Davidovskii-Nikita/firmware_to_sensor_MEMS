@@ -85,7 +85,7 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   MDNS.begin(host_OTA);
   MDNS.addService("http", "tcp", 80); 
   Serial.begin(9600); // отладка по последовательному порту
-  Wire.begin(2, 0);  // инициализация I2C на GPIO 2 и 0 (SDA, SCL)
+  Wire.begin(4, 5);  // инициализация I2C на GPIO 2 и 0 (SDA, SCL)
   sync_time = update_ntp(); // получение UNIX-времени
   scale_factor = for_scale/full_scale_range; // расчет делителя в зависимости от выбранной чувтсвиттельности
   // Блок инициализации MPU6050;
@@ -123,7 +123,7 @@ void loop()
   {
     reconnect();
   }
-  
+
   client_mqtt.loop();
 
   if(flag_a && flag_temp)
@@ -209,8 +209,6 @@ void update_temperature_value()
 
 void post_json()
 {
-  // WiFiClient client;
-  HTTPClient http;
   String buffer; // локальны буффер json документа
   DynamicJsonDocument jsonDocument(capacity); // объявление динамического jsom документа
   jsonDocument ["MAC"] = MAC; // добавление MAC адресаа в JSON
@@ -245,11 +243,6 @@ void post_json()
   client_mqtt.print(buffer);
 
   client_mqtt.endPublish();
-
-  http.begin(client, URL2);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  http.POST(buffer);
-  http.end();
 }
 
 void calibration()
