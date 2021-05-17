@@ -4,11 +4,11 @@
 Контроллер подключается к брокеру и отправляет JSON - файлы.   
 Для настройки следует изменить переменные в файле *core.h*.
 ~~~ C 
-const char* mqtt_server = "M5.WQTT.RU"; // адрес MQTT брокера
-const uint16_t mqtt_port = 2938; // порт MQTT брокера
+const char* mqtt_server = "185.231.71.153"; // адрес MQTT брокера
+const uint16_t mqtt_port = 1883; // порт MQTT брокера
 const char* topic = "TEST_SENSOR";
-const char* login = "u_WUYIDH"; // логин для топика MQTT
-const char* pass_mqtt = "kVu4uMTX"; // пароль для топика MQTT
+const char* login = "admin"; // логин для топика MQTT
+const char* pass_mqtt = "admin"; // пароль для топика MQTT
 ~~~
 
 **В случае использования NODE RED**.   
@@ -20,14 +20,14 @@ var input;
 var output;
 var i = 0;
 var date;
-
+// Для значений вибрации следует заменить Тemp на Axel.
 input = msg.payload
 
-while (i<input.Temp_time.length)
+while (i<input.Temp_time.length) // цикл работает по колличеству значений в массиве. 
 {
-    t = input.Temp_time[i]*1000;
+    t = input.Temp_time[i]*1000; // Temp_time заменить на Axel_time для значений вибрации
     date = new Date(t)
-    v = input.Temp[i]
+    v = input.Temp[i] // Temp заменить на Axel для значений вибрации
     output = [v, date.toISOString()];
     msg.payload = output;
     i++;
@@ -39,7 +39,7 @@ while (i<input.Temp_time.length)
 let value = msg.payload[0];
 let time = msg.payload[1];
 
-msg.payload = "INSERT INTO opc_server.vibro001_temp (value_t, time) VALUES ("+value+", '"+ time +"'::timestamp);";
+msg.payload = "INSERT INTO opc_server.vibro001_temp (value_t, time) VALUES ("+value+", '"+ time +"'::timestamp);"; // vibro001_temp - название таблицы
 
 
 msg.QueryParameters = msg.payload;
