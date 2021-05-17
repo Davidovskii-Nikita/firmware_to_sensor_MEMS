@@ -13,14 +13,16 @@
 #include <Ticker.h>
 // Блок настройки пользователем
 // ====================================================================================
-const char* ssid = "RUT230_9A75";// название WiFi сети
-const char* password = "z1x2c3v4b5" ;// пароль WiFi сети
+// const char* ssid = "RUT230_9A75";// название WiFi сети
+// const char* password = "z1x2c3v4b5" ;// пароль WiFi сети
 // const char* ssid = "RUT230_B4D2";// название WiFi сети
 // const char* password = "a4UQi1r0" ;// пароль WiFi сети
-// const char* ssid = "Keenetic-8735";// название WiFi сети
-// const char* password = "hj838RRe" ;// пароль WiFi сети
+const char* ssid = "Keenetic-8735";// название WiFi сети
+const char* password = "hj838RRe" ;// пароль WiFi сети
+// const char* ssid = "Davidovskii";// название WiFi сети
+// const char* password = "4054414LabU" ;// пароль WiFi сети
 const int full_scale_range = 16; // диапазон измерений акселерометра( 2, 4, 8, 16)
-const uint16_t period_a = 250; // Частота записи виброскорости
+const uint16_t period_a = 250; // Частота записи виброскоростиz
 const uint16_t period_temp = 2500; // Частота записи темперартуры
 const uint16_t period_v = 25; // Частота итегрирования виброускрорения
 // const uint16_t period_c = 200; // Частота калибрования 
@@ -28,10 +30,10 @@ const uint16_t range_a = 100; // колличество значений виб�
 const uint16_t range_temp = 10; // колличество значений времени в 1 пакете
 // const char* host = "http://192.168.1.212:8001"; // адрес хоста
 const char* host = "http://192.168.1.212:8001/"; // адрес хоста
-String URL1 = "http://192.168.8.212:8001/nkvm"; // адрес куда отправляются POST запросы
+String URL1 = "http://vm2089035.22ssd.had.wf/data"; // адрес куда отправляются POST запросы
 // String URL2 = "http://192.168.1.212:8001/nkvm"; // адрес куда отправляются POST запросы
 // String URL2 = "http://abaravy1.had.su/vibro_api.php?tablename=testtable3"; // адрес куда отправляются POST запросы
-String URL2 = "http://abaravy1.had.su/vibro_api.php?tablename=testtable3";// студентовский
+String URL2 = "http://abaravy1.had.su/vibro_api.php?tablename=testtable";// студентовский
 //====================================================================================
 // Адреса регистров MPU6050
 //====================================================================================
@@ -72,8 +74,8 @@ bool flag_a, flag_temp; // флаги достижения счетчиками 
 const uint16_t for_scale = 32768; // для расчета делителя ускорения
 uint16_t local_time_ms;
 double sync_time; // глобальная переменная, содержащая UNIX время в момент старта ESP
-const char* host_OTA = "esp-8266_e";// название устройства в локальной сети для прошивки через браузер
-const char* serverIndex = "<title> Update ESP</title><h1> Update ESP8266 E6-3C Send data to http://abaravy1.had.su/vibro_api.php?tablename=testtable3  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
+const char* host_OTA = "esp-8266_n1";// название устройства в локальной сети для прошивки через браузер
+const char* serverIndex = "<title> Update ESP</title><h1> ESP  </h1><img src = ""https://raw.githubusercontent.com/AchimPieters/ESP8266-12F---Power-Mode/master/ESP8266_01X.jpg""><form method='POST' action='/update' enctype='multipart/form-data'> <input type='file' name='update'><input type='submit' value='Update'></form>";
 const char* update_path = "/firmware";
 double offset_startup_time = 0;
 // Фильтр бегущего среднего

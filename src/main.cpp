@@ -13,6 +13,7 @@ void setup()
     offset_startup_time = (double)millis()/1000;
     delay(1500);
   }
+
   WiFi.mode(WIFI_AP_STA); 
   // Создание WEB-страницы
   //====================================================================================
@@ -29,9 +30,11 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
     }, []() {
       HTTPUpload& upload = server.upload();
       if (upload.status == UPLOAD_FILE_START) {
+
         Ticker_A.detach();
         Ticker_V.detach();
         Ticker_T.detach();
+
         Serial.setDebugOutput(true);
         WiFiUDP::stopAll();
         Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -59,8 +62,6 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
     Serial.printf("Ready! Open http://%s.local in your browser\n", host_OTA);
   } 
   //====================================================================================
-  MDNS.begin(host_OTA);
-  MDNS.addService("http", "tcp", 80); 
   Serial.begin(9600); // отладка по последовательному порту
   Wire.begin(2, 0);  // инициализация I2C на GPIO 2 и 0 (SDA, SCL)
   sync_time = update_ntp(); // получение UNIX-времени
@@ -69,31 +70,30 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   //====================================================================================
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_PWR_MGMT_1,0x01);
     switch (full_scale_range)
-{
-case 16:
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
-  break;
-case 8:
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x10);
-  break;
-case 4:
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x08);
-  break;
-case 2:
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x00);
-  break;  
-
-default:
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
-  break;
-}
+    {
+    case 16:
+      I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
+      break;
+    case 8:
+      I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x10);
+      break;
+    case 4:
+      I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x08);
+      break;
+    case 2:
+      I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x00);
+      break;  
+    default:
+      I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x18);
+      break;
+    }
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_INT_ENABLE, 0x01);
   //====================================================================================
   MAC = WiFi.macAddress(); // Получение MAC адреса устройства
   capacity = 2 * JSON_ARRAY_SIZE(range_temp) + 2 * JSON_ARRAY_SIZE(range_a) + JSON_OBJECT_SIZE(5) + 3500; // вычисление объема JSON файла
-  local_time_ms = millis();
+  local_time_ms = millis();//????
   calibration();
-  WiFi.setOutputPower(0);
+  WiFi.setOutputPower(0); //???
   // Блок инициализации таймеров
   // Объект класса Ticker вызывает функцию attach_ms с параметрами 
   // периода вызова и функци вызова
@@ -217,6 +217,7 @@ void post_json()
   HTTPClient http;
   String buffer; // локальны буффер json документа
   String dat="data=";
+
   DynamicJsonDocument jsonDocument(capacity); // объявление динамического jsom документа
   jsonDocument ["MAC"] = MAC; // добавление MAC адресаа в JSON
   // добавление соответвствующих массивов в json
@@ -241,14 +242,14 @@ void post_json()
   
   serializeJson(jsonDocument, buffer); // создание заполненного json
 
-  String new_buffer = dat + buffer;
+  // String new_buffer = dat + buffer;
 
-  http.begin(client, URL1);// отправка
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  http.POST(buffer);
-  http.end();
+  // http.begin(client, URL1);// отправка
+  // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // http.POST(buffer);
+  // http.end();
 
-  http.begin(client, URL2);
+  http.begin(client, URL1);
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   http.POST(buffer);
   http.end();

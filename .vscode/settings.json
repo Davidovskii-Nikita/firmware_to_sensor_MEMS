@@ -3,5 +3,6 @@
         "functional": "cpp",
         "*.tcc": "cpp",
         "limits": "cpp"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }
