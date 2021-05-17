@@ -1,29 +1,6 @@
 #include <Arduino.h>
 #include "core.h"
 
-
-WiFiClient client;
-PubSubClient client_mqtt(client);
-
-
-void reconnect() {
-  // Loop until we're reconnected
-  while (!client_mqtt.connected()) 
-  {
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    if (client_mqtt.connect(clientId.c_str(), login, pass_mqtt)) 
-    {
-      client_mqtt.subscribe("inTopic");
-    } 
-    else 
-    {
-      delay(5000);
-    }
-  }
-}
-
-
 void setup() 
 {
   extern double sync_time;
@@ -100,7 +77,7 @@ if (WiFi.waitForConnectResult() == WL_CONNECTED) {
   calibration();
   WiFi.setOutputPower(0);
 
-  client_mqtt.setServer(mqtt_server, 2938); //1883
+  client_mqtt.setServer(mqtt_server, mqtt_port); //1883
 
   // Блок инициализации таймеров
   // Объект класса Ticker вызывает функцию attach_ms с параметрами 
@@ -124,8 +101,6 @@ void loop()
     reconnect();
   }
 
-  client_mqtt.loop();
-
   if(flag_a && flag_temp)
   {
     post_json(); // сбор и отправка данных
@@ -134,9 +109,14 @@ void loop()
     flag_a = false;
     flag_temp = false;
   }
- 
+ client_mqtt.loop();
 }
 
+  /**
+   *  @brief  Считает значение виброскорости.
+   *  @param  scale_factor  Внешняя переменная для получения нормального значения ускорения.
+   *  @return Ничего не возвращает, обновляет глобальную перемнную rms.
+  */
 void get_vibrospeed()
 {
   extern uint16_t scale_factor;
@@ -150,7 +130,13 @@ void get_vibrospeed()
   // получение СКЗ
   rms = get_RMS(vibro_speed_x,vibro_speed_y,vibro_speed_z);
 } 
- 
+
+  /**
+   *  @brief  Наполняет глобальные массивы данных(opros_axel[], opros_axel_time[]), сигнализирует о наполненности последних.
+   *  @param  flag_a  Глобальный флаг, сигнализирующий о заполненности массивов.
+   *  @param  count_a  Колличество значений, записываемых в массивы
+   *  @param  rms Глобальная переменная среднеквадратичного значения виброскорости по трем осям.
+  */
 void upate_vibrospeed_value()
 {
   extern bool flag_a;
@@ -159,6 +145,7 @@ void upate_vibrospeed_value()
   String time_to_json;
   String speed_to_json;
   calibration(); 
+  // Serial.println("Update_vibrospeed");
   if (count_a<range_a)
   {
     time_to_json = String(get_time(sync_time,offset_startup_time));
@@ -183,6 +170,11 @@ void upate_vibrospeed_value()
 
 }
 
+  /**
+   *  @brief  Наполняет глобальные массивы данных(opros_temp[], opros_temp_time[]), сигнализирует о наполненности последних.
+   *  @param  flag_t  Глобальный флаг, сигнализирующий о заполненности массивов.
+   *  @param  count_t  Колличество значений, записываемых в массивы
+  */
 void update_temperature_value()
 {
   extern bool flag_temp;
@@ -207,6 +199,9 @@ void update_temperature_value()
   }
 }
 
+  /**
+   *  @brief  Формирование json- -документа и отправка его.
+  */
 void post_json()
 {
   String buffer; // локальны буффер json документа
@@ -218,9 +213,6 @@ void post_json()
   JsonArray Temp_time = jsonDocument.createNestedArray("Temp_time");
   JsonArray Temp = jsonDocument.createNestedArray("Temp");
 
-
-
-
   int i = 0;
   int j = 0;
   for(i = 0; i < range_temp; i++)// наполнеие массивов данными
@@ -231,6 +223,7 @@ void post_json()
   for(j=0; j<range_a; j++)// наполнеие массивов данными
   {
     Axel.add(opros_axel[j]);
+    
     Axel_time.add(opros_axel_time[j]);
   }
   
@@ -238,13 +231,16 @@ void post_json()
 
   int len = buffer.length();
 
-  client_mqtt.beginPublish("outTopic",len, false);
+  client_mqtt.beginPublish(topic,len, false);
 
   client_mqtt.print(buffer);
 
   client_mqtt.endPublish();
 }
 
+  /**
+   *  @brief  Калибровка данных, получаемых с каждой оси путем расчета експоненциального бегущего среднего.
+  */
 void calibration()
 {
   float x,y,z;
@@ -263,6 +259,11 @@ void calibration()
   i=0;
 }
 
+  /**
+   *  @brief  Расчет бегущего среднего.
+   *  @param  x,y,z  Для каждой переменной считается бегущее среднее.
+   *  @return Ничего не возвращает, обновляет глобальные переменные (filVal_x, filVal_y, filVal_z)
+  */
 void expRunningAverage(float x ,float y, float z)
 {
   filVal_x += (x - filVal_x) * k;
@@ -270,7 +271,11 @@ void expRunningAverage(float x ,float y, float z)
   filVal_z += (z - filVal_z) * k;
 }
 
-
+  /**
+   *  @brief  Дискретеое интегрирование.
+   *  @param  x,y,z  Для каждой переменной считается дискрентное интегрирование.
+   *  @return Ничего не возвращает, обновляет глобальные переменные (vibro_speed_x, vibro_speed_y, vibro_speed_z)
+  */
 void discret_integral(float x, float y, float z)
 {
   vibro_speed_x = vibro_speed_x + ((x+old_x)*(period_v/2000.0)*g)*(1000.0/period_v); // дискретное интегрирование методом трапеций
@@ -279,4 +284,24 @@ void discret_integral(float x, float y, float z)
   old_y=y;
   vibro_speed_z = vibro_speed_z + ((z+old_z)*(period_v/2000.0)*g)*(1000.0/period_v); // дискретное интегрирование методом трапеций
   old_z=z;
+}
+
+  /**
+   *  @brief  Функция переподключения к MQTT брокеру..
+  */
+void reconnect() {
+  while (!client_mqtt.connected()) 
+  {
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    if (client_mqtt.connect(clientId.c_str(), login, pass_mqtt)) 
+    {
+      client_mqtt.subscribe(topic);
+    } 
+    else 
+    {
+      delay(500);
+      Serial.println("Try to conncect");
+    }
+  }
 }

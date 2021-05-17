@@ -15,11 +15,21 @@
 //====================================================================================
 // const char* ssid = "RUT230_9A75";// название WiFi сети
 // const char* password = "z1x2c3v4b5" ;// пароль WiFi сети
-const char* ssid = "Davidovskii";// название WiFi сети
-const char* password = "4054414LabU" ;// пароль WiFi сети
-const char* mqtt_server = "M5.WQTT.RU";
-const char* login = "u_WUYIDH";
-const char* pass_mqtt = "kVu4uMTX";
+const char* ssid = "Keenetic-8735";// название WiFi сети
+const char* password = "hj838RRe" ;// пароль WiFi сети
+
+// const char* mqtt_server = "185.231.71.153"; // адрес MQTT брокера
+// const uint16_t mqtt_port = 1883; // порт MQTT брокера
+// const char* topic = "TEST_SENSOR";
+// const char* login = "admin"; // логин для топика MQTT
+// const char* pass_mqtt = "admin"; // пароль для топика MQTT
+
+const char* mqtt_server = "M5.WQTT.RU"; // адрес MQTT брокера
+const uint16_t mqtt_port = 2938; // порт MQTT брокера
+const char* topic = "TEST_SENSOR";
+const char* login = "u_WUYIDH"; // логин для топика MQTT
+const char* pass_mqtt = "kVu4uMTX"; // пароль для топика MQTT
+
 const int full_scale_range = 16; // диапазон измерений акселерометра( 2, 4, 8, 16)
 const uint16_t period_a = 250; // Частота записи виброскорости
 const uint16_t period_temp = 2500; // Частота записи темперартуры
@@ -75,7 +85,8 @@ float time_to_calibr = 100;// колличество точек фильтров
 ESP8266WebServer server(80);
 ESP8266HTTPUpdateServer httpUpdater;
 Ticker Ticker_A, Ticker_T, Ticker_V; // инициализация счетчиков
-
+WiFiClient client;
+PubSubClient client_mqtt(client);
 // Инициализация функций
 //====================================================================================
 void I2C_Write(uint8_t deviceAddress, uint8_t regAddress, uint8_t data);// функция записи значений по I2C
@@ -93,5 +104,6 @@ void calibration(); // получает значения углов, для ни
 void expRunningAverage(float x ,float y, float z); // бегущее среднее для 3 осей
 float clamp(float v, float minv, float maxv); // функция clamp если больше maxv то v если меньше min то м
 void discret_integral(float x, float y, float z); // дискретное интегрирование по 3 осям
+void reconnect(); // функция переподключения к MQTT брокеру.
 //====================================================================================
 #endif
