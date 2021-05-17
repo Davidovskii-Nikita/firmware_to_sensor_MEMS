@@ -16,7 +16,7 @@
 
 ![Внешний вид GY-521](https://github.com/Davidovskii-Nikita/firmware_to_sensor_MEMS/blob/master/docs/mpu-6050-01.jpg)
 
-Его [даташит](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf) и [карта регистров](https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf). Подключение к нему осуществляется по I2C шине. Для этого используется библиотека *Wire.h*. 
+Его [даташит](https://github.com/Davidovskii-Nikita/firmware_to_sensor_MEMS/blob/master/docs/MPU-6000-Datasheet1.pdf) и [карта регистров](https://github.com/Davidovskii-Nikita/firmware_to_sensor_MEMS/blob/master/docs/MPU-6000-Register-Map1.pdf). Подключение к нему осуществляется по I2C шине. Для этого используется библиотека *Wire.h*. 
 
 
 Сбором и хранением данных занимается микроконтроллер **ESP 8266** на базе модуля ESP-01. 
@@ -561,5 +561,5 @@ float time_to_calibr = 100;// колличество точек фильтров
 
 * Используя *PlatformIO* при подключении через по проводам (описано в главе отладка) загруженная прошивка может не работать. В это время ESP генерирует исключение 28    
 
-Возможное решение - ипользовать стартовую прошивку для **Arduino IDE**. ino - файл содержит полную, последнюю версию прошивки. После этого можно прошиваться через браузер
+Возможное решение - ипользовать стартовую [прошивку](https://github.com/Davidovskii-Nikita/firmware_to_sensor_MEMS/blob/master/docs/sketch_may17b.ino) для *Arduino IDE*. ino - файл содержит полную, последнюю версию прошивки. После этого можно прошиваться через браузер.
 
